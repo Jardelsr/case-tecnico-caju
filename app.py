@@ -38,14 +38,16 @@ def endpoint_post():
         createTransaction(data['accountId'], amount, data['merchant'], data['mcc'], 'approved')
         return jsonify({'transaction': 'approved'}), 200
     else :
-        reason = 'Insufficient balance to proceed with the transaction."'
+        reason = 'Insufficient balance to proceed with the transaction.'
         createTransaction(data['accountId'], amount, data['merchant'], data['mcc'], 'denied', reason)
         return jsonify({'transaction': 'denied'}), 401
     
+# rota para buscar as transações de uma conta
 @app.route('/api/<int:id>/transactions', methods=['GET'])
 def getTransactions(id):
     return getTransactionsByAccount(id)
 
+# rota para buscar as transações de um estabelecimento
 @app.route('/api/search', methods=['GET'])
 def search():
     merchant = request.args.get('merchant', type=str)

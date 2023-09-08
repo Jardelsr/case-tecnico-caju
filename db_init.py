@@ -8,6 +8,7 @@ db_config = {
     "database": "caju"
 }
 
+# função para fazer a conexão com o banco de dados
 def get_connection():
     try:
         conn = mysql.connector.connect(**db_config)
@@ -16,6 +17,7 @@ def get_connection():
         print(f"Erro na conexão com o banco de dados: {err}")
         return None
 
+# função para retornar os saldos de uma conta, buscada pelo seu id
 def getAccountBalanceByMCC(accountId, mcc):
     with get_connection() as conn:
         cursor = conn.cursor()
@@ -24,6 +26,7 @@ def getAccountBalanceByMCC(accountId, mcc):
         balance = cursor.fetchone()
         return balance[0] if balance else None
     
+# função para retornar as transações que uma conta especifica fez
 def getTransactionsByAccount(accountId):
     with get_connection() as conn:
         cursor = conn.cursor()
@@ -46,6 +49,7 @@ def getTransactionsByAccount(accountId):
 
         return transactions_list
     
+# função que retorna as transações que um estabelecimento fez
 def getTransactionsByMerchant(merchant):
     with get_connection() as conn:
         cursor = conn.cursor()
@@ -69,6 +73,7 @@ def getTransactionsByMerchant(merchant):
 
         return transactions_list
     
+# função que atualiza o saldo da conta após uma transação
 def setAccountBalance(accountId, mcc, ammount):
     try: 
         conn = get_connection()
@@ -83,6 +88,7 @@ def setAccountBalance(accountId, mcc, ammount):
         cursor.close()
         conn.close()
 
+# função que registra a transação efetuada
 def createTransaction(accountId, amount, merchant, mcc, status, reason = None):
     try:
         conn = get_connection()
@@ -100,6 +106,7 @@ def createTransaction(accountId, amount, merchant, mcc, status, reason = None):
         cursor.close()
         conn.close()
     
+# função que cria a tabela de contas
 def create_accounts_table():
     try:
         conn = get_connection()
@@ -122,6 +129,7 @@ def create_accounts_table():
         cursor.close()
         conn.close()
 
+# função que cria a tabela de transações
 def create_transactions_table():
     try:
         conn = get_connection()
@@ -147,6 +155,7 @@ def create_transactions_table():
         cursor.close()
         conn.close()
 
+#função que popula a tabela de contas com alguns dados
 def insert_account_data(account_data):
     try:
         conn = get_connection()

@@ -24,6 +24,51 @@ def getAccountBalanceByMCC(accountId, mcc):
         balance = cursor.fetchone()
         return balance[0] if balance else None
     
+def getTransactionsByAccount(accountId):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        query = f"SELECT * FROM transactions WHERE accountId = {accountId}"
+        cursor.execute(query)
+        transactions = cursor.fetchall()
+
+        transactions_list = []
+        for row in transactions:
+            transaction_dict = {
+                'id': row[0],
+                'accountId': row[1],
+                'amount': row[2],
+                'merchant': row[3],
+                'mcc': row[4],
+                'status': row[5],
+                'reason': row[6]
+            }
+            transactions_list.append(transaction_dict)
+
+        return transactions_list
+    
+def getTransactionsByMerchant(merchant):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        query = f"SELECT * FROM transactions WHERE merchant LIKE '{merchant}'"
+        print(query)
+        cursor.execute(query)
+        transactions = cursor.fetchall()
+    
+        transactions_list = []
+        for row in transactions:
+            transaction_dict = {
+                'id': row[0],
+                'accountId': row[1],
+                'amount': row[2],
+                'merchant': row[3],
+                'mcc': row[4],
+                'status': row[5],
+                'reason': row[6]
+            }
+            transactions_list.append(transaction_dict)
+
+        return transactions_list
+    
 def setAccountBalance(accountId, mcc, ammount):
     try: 
         conn = get_connection()
@@ -37,8 +82,24 @@ def setAccountBalance(accountId, mcc, ammount):
     finally:
         cursor.close()
         conn.close()
-    
 
+def createTransaction(accountId, amount, merchant, mcc, status, reason = None):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        create_transaction_query = """
+        INSERT INTO transactions (accountId, amount, merchant, mcc, status, reason) 
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(create_transaction_query, (accountId, amount, merchant, mcc, status, reason))
+        conn.commit()
+    except mysql.connector.Error as err:
+        print(f"Erro ao criar a transação: {err}")
+    finally:
+        cursor.close()
+        conn.close()
+    
 def create_accounts_table():
     try:
         conn = get_connection()
@@ -67,14 +128,15 @@ def create_transactions_table():
         cursor = conn.cursor()
 
         create_transactions_table_query = """
-        CREATE TABLE IF NOT EXISTS transactions (
+            CREATE TABLE IF NOT EXISTS transactions (
             id INT AUTO_INCREMENT PRIMARY KEY,
             accountId INT NOT NULL,
             amount DECIMAL(10, 2) NOT NULL,
             merchant VARCHAR(255) NOT NULL,
             mcc INT NOT NULL,
-            FOREIGN KEY (accountId) REFERENCES accounts(id)
-        );
+            status ENUM('approved', 'denied') NOT NULL,
+            reason VARCHAR(255),
+            FOREIGN KEY (accountId) REFERENCES accounts(id))
         """
 
         cursor.execute(create_transactions_table_query)
